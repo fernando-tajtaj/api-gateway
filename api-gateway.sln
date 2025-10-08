@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36429.23 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-gateway", "api-gateway\api-gateway.csproj", "{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Debug|x64.ActiveCfg = Debug|x64
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Debug|x64.Build.0 = Debug|x64
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Release|x64.ActiveCfg = Release|x64
+		{BACD9AB7-66C2-46CD-B1D5-2E73889B3216}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C1F2363-2D8A-4AD2-8F76-4875B6C63C00}
+	EndGlobalSection
+EndGlobal
