@@ -1,4 +1,5 @@
 ﻿using api_gateway.Models.DTO.Player;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
@@ -20,6 +21,7 @@ namespace api_gateway.Controllers
             this._logger = logger;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<PlayerReadDto>>> GetPlayers()
         {
@@ -51,6 +53,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("by-team/{uuidTeam}")]
         public async Task<ActionResult<List<PlayerReadDto>>> GetPlayersByTeam(string uuidTeam)
         {
@@ -82,6 +85,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("{uuid}")]
         public async Task<IActionResult> GetPlayerByUuid(string uuid)
         {
@@ -107,6 +111,7 @@ namespace api_gateway.Controllers
             return Ok(player);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreatePlayer([FromBody] PlayerCreateDto playerDto)
         {
@@ -143,6 +148,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{uuid}")]
         public async Task<IActionResult> UpdatePlayer(string uuid, [FromBody] PlayerUpdateDto playerDto)
         {
@@ -180,6 +186,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{uuid}")]
         public async Task<IActionResult> DeletePlayer(string uuid)
         {

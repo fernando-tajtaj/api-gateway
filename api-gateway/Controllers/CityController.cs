@@ -1,7 +1,7 @@
 ﻿using api_gateway.Models.DTO.City;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using RestSharp;
 
 namespace api_gateway.Controllers
 {
@@ -20,6 +20,7 @@ namespace api_gateway.Controllers
             this._logger = logger;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<CityReadDto>>> GetCities()
         {

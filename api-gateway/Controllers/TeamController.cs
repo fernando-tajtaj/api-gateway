@@ -1,6 +1,7 @@
 ﻿namespace api_gateway.Controllers
 {
     using api_gateway.Models.DTO.Team;
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using System.Text;
     using System.Text.Json;
@@ -20,6 +21,7 @@
             this._logger = logger;
         }
 
+        [Authorize]
         [HttpPost("upload-logo")]
         public async Task<IActionResult> UploadLogo(IFormFile file)
         {
@@ -85,6 +87,7 @@
             }
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<TeamReadDto>>> GetTeams()
         {
@@ -116,6 +119,7 @@
             }
         }
 
+        [Authorize]
         [HttpGet("{uuid}")]
         public async Task<IActionResult> GetTeamByUuid(string uuid)
         {
@@ -144,6 +148,7 @@
             return Ok(team);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateTeam([FromBody] TeamCreateDto teamDto)
         {
@@ -180,6 +185,7 @@
             }
         }
 
+        [Authorize]
         [HttpPut("{uuid}")]
         public async Task<IActionResult> UpdateTeam(string uuid, [FromBody] TeamUpdateDto teamDto)
         {
@@ -219,6 +225,7 @@
             }
         }
 
+        [Authorize]
         [HttpDelete("{uuid}")]
         public async Task<IActionResult> DeleteTeam(string uuid)
         {

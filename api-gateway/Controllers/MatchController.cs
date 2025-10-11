@@ -1,4 +1,5 @@
 ﻿using api_gateway.Models.DTO.Match;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.Text.Json;
@@ -20,6 +21,7 @@ namespace api_gateway.Controllers
             this._logger = logger;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<MatchReadDto>>> GetMatches()
         {
@@ -51,6 +53,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet("{uuid}")]
         public async Task<IActionResult> GetMatchByUuid(string uuid)
         {
@@ -76,6 +79,7 @@ namespace api_gateway.Controllers
             return Ok(match);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateMatch([FromBody] MatchCreateDto macthDto)
         {
@@ -112,6 +116,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpPut("{uuid}")]
         public async Task<IActionResult> UpdateMatch(string uuid, [FromBody] MatchUpdateDto matchDto)
         {
@@ -149,6 +154,7 @@ namespace api_gateway.Controllers
             }
         }
 
+        [Authorize]
         [HttpDelete("{uuid}")]
         public async Task<IActionResult> DeleteMatch(string uuid)
         {

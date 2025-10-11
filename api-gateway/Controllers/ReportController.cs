@@ -1,4 +1,5 @@
 ﻿using api_gateway.Models.DTO.Report;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Text.Json;
@@ -24,6 +25,7 @@ namespace api_gateway.Controllers
         }
 
         // ✅ GET: api/report
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAllReports()
         {
@@ -43,6 +45,7 @@ namespace api_gateway.Controllers
         }
 
         // ✅ GET: api/report/{uuid}
+        [Authorize]
         [HttpGet("{uuid}")]
         public async Task<IActionResult> GetReportById(string uuid)
         {

@@ -1,4 +1,5 @@
 ﻿using api_gateway.Models.DTO.Position;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 
@@ -19,6 +20,7 @@ namespace api_gateway.Controllers
             this._logger = logger;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<PositionReadDto>>> GetPositions()
         {
