@@ -11,9 +11,9 @@
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<AuthController> _logger;
+        private readonly ILogger<TeamController> _logger;
 
-        public TeamController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<AuthController> logger)
+        public TeamController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<TeamController> logger)
         {
             this._httpClientFactory = httpClientFactory;
             this._configuration = configuration;
@@ -26,20 +26,62 @@
             try
             {
                 if (file == null || file.Length == 0)
-                    return BadRequest("Archivo no recibido");
+                    return BadRequest(new { message = "Archivo no recibido" });
 
-                var filePath = Path.Combine(this._configuration["PathLogo"].ToString(), file.FileName);
+                // Validaciones
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    return BadRequest(new { message = "Formato no permitido" });
+                }
+
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    return BadRequest(new { message = "Archivo muy grande. Máximo 5MB" });
+                }
+
+                // Ruta de logos
+                var logosPath = Environment.GetEnvironmentVariable("LOGOS_PATH")
+                    ?? _configuration["PathLogo"]
+                    ?? Path.Combine(Directory.GetCurrentDirectory(), "logos");
+
+                if (!Directory.Exists(logosPath))
+                {
+                    Directory.CreateDirectory(logosPath);
+                }
+
+                // Limpiar nombre de archivo (eliminar caracteres peligrosos)
+                var safeFileName = Path.GetFileName(file.FileName);
+                var filePath = Path.Combine(logosPath, safeFileName);
+
+                // Si el archivo ya existe, agregar timestamp
+                if (System.IO.File.Exists(filePath))
+                {
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(safeFileName);
+                    safeFileName = $"{fileNameWithoutExt}_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+                    filePath = Path.Combine(logosPath, safeFileName);
+                }
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
 
-                return Ok(new { path = $"/resources/logos/{file.FileName}" });
+                return Ok(new
+                {
+                    success = true,
+                    path = $"/logos/{safeFileName}"
+                });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = "Sin permisos", error = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return StatusCode(500, new { message = "Error al subir archivo", error = ex.Message });
             }
         }
 
@@ -106,69 +148,105 @@
         public async Task<IActionResult> CreateTeam([FromBody] TeamCreateDto teamDto)
         {
             if (teamDto == null)
-                return BadRequest("Datos inválidos");
+                return BadRequest(new { message = "Datos inválidos" });
 
-            var baseUrl = this._configuration["Services:TeamsService"] ?? "http://team-service:8080";
-            var client = this._httpClientFactory.CreateClient();
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(teamDto),
-                Encoding.UTF8,
-                "application/json"
-            );
-
-            var response = await client.PostAsync($"{baseUrl}/api/team", content);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                _logger.LogError("Error al crear el equipo: {StatusCode}", response.StatusCode);
-                var errorText = await response.Content.ReadAsStringAsync();
-                return StatusCode((int)response.StatusCode, errorText);
-            }
+                var baseUrl = _configuration["Services:TeamsService"] ?? "http://teams-service:8080";
+                var client = _httpClientFactory.CreateClient();
 
-            var result = await response.Content.ReadAsStringAsync();
-            return Content(result, "application/json");
+                var content = new StringContent(
+                    JsonSerializer.Serialize(teamDto),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                var response = await client.PostAsync($"{baseUrl}/api/teams", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorText = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error al crear equipo: {response.StatusCode} - {errorText}");
+                    return StatusCode((int)response.StatusCode, new { message = errorText });
+                }
+
+                var result = await response.Content.ReadAsStringAsync();
+                return Content(result, "application/json");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Excepción al crear equipo");
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
+            }
         }
 
         [HttpPut("{uuid}")]
         public async Task<IActionResult> UpdateTeam(string uuid, [FromBody] TeamUpdateDto teamDto)
         {
             if (teamDto == null)
-                return BadRequest("Datos inválidos");
+                return BadRequest(new { message = "Datos inválidos" });
 
-            var client = this._httpClientFactory.CreateClient();
-            var baseUrl = this._configuration["Services:TeamsService"] ?? "http://team-service:8080";
-
-            var content = new StringContent(JsonSerializer.Serialize(teamDto), Encoding.UTF8, "application/json");
-            var response = await client.PutAsync(baseUrl, content);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al actualizar equipo: {Error}", error);
-                return StatusCode((int)response.StatusCode, error);
-            }
+                var client = _httpClientFactory.CreateClient();
+                var baseUrl = _configuration["Services:TeamsService"] ?? "http://teams-service:8080";
 
-            var result = await response.Content.ReadAsStringAsync();
-            return Content(result, "application/json");
+                var content = new StringContent(
+                    JsonSerializer.Serialize(teamDto),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+
+                // IMPORTANTE: Agregar el uuid a la URL
+                var url = $"{baseUrl}/api/teams/{uuid}";
+
+                var response = await client.PutAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error al actualizar equipo: {error}");
+                    return StatusCode((int)response.StatusCode, new { message = error });
+                }
+
+                var result = await response.Content.ReadAsStringAsync();
+                return Content(result, "application/json");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Excepción al actualizar equipo");
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
+            }
         }
 
         [HttpDelete("{uuid}")]
         public async Task<IActionResult> DeleteTeam(string uuid)
         {
-            var client = this._httpClientFactory.CreateClient();
-            var baseUrl = this._configuration["Services:TeamsService"] ?? "http://team-service:8080";
-
-            var response = await client.DeleteAsync(baseUrl);
-
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al eliminar equipo: {Error}", error);
-                return StatusCode((int)response.StatusCode, error);
-            }
+                var client = _httpClientFactory.CreateClient();
+                var baseUrl = _configuration["Services:TeamsService"] ?? "http://teams-service:8080";
 
-            return Ok(new { message = "Equipo eliminado correctamente" });
+                // IMPORTANTE: Agregar el uuid a la URL
+                var url = $"{baseUrl}/api/teams/{uuid}";
+                _logger.LogInformation($"Eliminando equipo en: {url}");
+
+                var response = await client.DeleteAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error al eliminar equipo: {error}");
+                    return StatusCode((int)response.StatusCode, new { message = error });
+                }
+
+                return Ok(new { message = "Equipo eliminado correctamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Excepción al eliminar equipo");
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
+            }
         }
     }
 }

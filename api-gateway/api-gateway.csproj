@@ -15,8 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\DTO\Nationality\" />
-    <Folder Include="Models\DTO\Position\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
