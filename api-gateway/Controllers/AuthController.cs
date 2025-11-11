@@ -32,7 +32,7 @@
                 var jsonContent = JsonSerializer.Serialize(request);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync($"{authServiceUrl}/api/auth/login", content);
+                var response = await client.PostAsync($"{authServiceUrl}/auth/login", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -61,7 +61,7 @@
                 var jsonContent = JsonSerializer.Serialize(request);
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await client.PostAsync($"{authServiceUrl}/api/auth/register", content);
+                var response = await client.PostAsync($"{authServiceUrl}/auth/register", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -79,6 +79,74 @@
             }
         }
 
+        [HttpGet("google")]
+        public async Task<IActionResult> RedirectToGoogle()
+        {
+            var client = _httpClientFactory.CreateClient();
+
+            // NO seguir redirects automáticamente
+            var handler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
+
+            using var clientWithoutRedirect = new HttpClient(handler);
+            var authServiceUrl = _configuration["Services:AuthService"] ?? "http://auth-service:4000";
+
+            var response = await clientWithoutRedirect.GetAsync($"{authServiceUrl}/auth/google");
+
+            // Si es redirect (302, 301, 307, 308)
+            if ((int)response.StatusCode >= 300 && (int)response.StatusCode < 400)
+            {
+                var location = response.Headers.Location?.ToString();
+                if (!string.IsNullOrEmpty(location))
+                {
+                    return Redirect(location);
+                }
+            }
+
+            // Si es OK, devolver el contenido
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return Content(content, response.Content.Headers.ContentType?.ToString() ?? "text/plain");
+            }
+
+            return StatusCode((int)response.StatusCode, "Error al contactar Auth-Service");
+        }
+
+        [HttpGet("google/callback")]
+        public async Task<IActionResult> GoogleCallback()
+        {
+            var handler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
+
+            using var client = new HttpClient(handler);
+            var authServiceUrl = _configuration["Services:AuthService"] ?? "http://auth-service:4000";
+            var query = Request.QueryString.Value;
+
+            var response = await client.GetAsync($"{authServiceUrl}/auth/google/callback{query}");
+
+            if ((int)response.StatusCode >= 300 && (int)response.StatusCode < 400)
+            {
+                var location = response.Headers.Location?.ToString();
+                if (!string.IsNullOrEmpty(location))
+                {
+                    return Redirect(location);
+                }
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return Content(content, response.Content.Headers.ContentType?.ToString() ?? "text/plain");
+            }
+
+            return StatusCode((int)response.StatusCode, "Error en callback de Google");
+        }
+
         [HttpGet("validate")]
         public async Task<IActionResult> ValidateToken([FromHeader(Name = "Authorization")] string authorization)
         {
@@ -94,7 +162,7 @@
 
                 client.DefaultRequestHeaders.Add("Authorization", authorization);
 
-                var response = await client.GetAsync($"{authServiceUrl}/api/auth/validate");
+                var response = await client.GetAsync($"{authServiceUrl}/auth/validate");
 
                 if (response.IsSuccessStatusCode)
                 {
