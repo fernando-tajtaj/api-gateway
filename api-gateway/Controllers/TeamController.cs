@@ -93,7 +93,12 @@
         {
             try
             {
-                var baseUrl = this._configuration["Services:TeamsService"] ?? "http://team-service:8081";
+                var baseUrl = this._configuration["Services:TeamsService"];
+
+                if (string.IsNullOrEmpty(baseUrl))
+                {
+                    throw new InvalidOperationException("Service endpoint not configured: Services:TeamsService");
+                }
 
                 var client = this._httpClientFactory.CreateClient();
                 client.BaseAddress = new Uri(baseUrl);
@@ -123,7 +128,12 @@
         [HttpGet("{uuid}")]
         public async Task<IActionResult> GetTeamByUuid(string uuid)
         {
-            var baseUrl = this._configuration["Services:TeamsService"] ?? "http://team-service:8081";
+            var baseUrl = this._configuration["Services:TeamsService"];
+            
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                throw new InvalidOperationException("Service endpoint not configured: Services:TeamsService");
+            }
 
             var client = this._httpClientFactory.CreateClient();
             client.BaseAddress = new Uri(baseUrl);
@@ -157,7 +167,13 @@
 
             try
             {
-                var baseUrl = _configuration["Services:TeamsService"] ?? "http://teams-service:8080";
+                var baseUrl = this._configuration["Services:TeamsService"];
+
+                if (string.IsNullOrEmpty(baseUrl))
+                {
+                    throw new InvalidOperationException("Service endpoint not configured: Services:TeamsService");
+                }
+
                 var client = _httpClientFactory.CreateClient();
 
                 var content = new StringContent(
@@ -195,7 +211,12 @@
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var baseUrl = _configuration["Services:TeamsService"] ?? "http://teams-service:8080";
+                
+                var baseUrl = this._configuration["Services:TeamsService"];
+                if (string.IsNullOrEmpty(baseUrl))
+                {
+                    throw new InvalidOperationException("Service endpoint not configured: Services:TeamsService");
+                }
 
                 var content = new StringContent(
                     JsonSerializer.Serialize(teamDto),
@@ -232,7 +253,12 @@
             try
             {
                 var client = _httpClientFactory.CreateClient();
-                var baseUrl = _configuration["Services:TeamsService"] ?? "http://teams-service:8080";
+                var baseUrl = this._configuration["Services:TeamsService"];
+                
+                if (string.IsNullOrEmpty(baseUrl))
+                {
+                    throw new InvalidOperationException("Service endpoint not configured: Services:TeamsService");
+                }
 
                 // IMPORTANTE: Agregar el uuid a la URL
                 var url = $"{baseUrl}/api/teams/{uuid}";
